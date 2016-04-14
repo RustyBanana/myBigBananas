@@ -1,0 +1,19 @@
+This is where we input what we plan and where to put stuff.
+
+
+Structs :
+    _color {
+      unsigned char red,
+      unsigned char blue,
+      unsigned char green}
+    _position {double x, double y}
+    _complex{double a, double b}
+
+Generating set --->
+
+_position pixelPosition(_position, int zoom, int pixelNumber)
+int escapeSteps(_position)
+_complex squareComplex(_complex)
+Double modulus(_complex)
+
+Printing the set --->
