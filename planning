@@ -11,9 +11,16 @@ Structs :
 
 Generating set --->
 
-_position pixelPosition(_position, int zoom, int pixelNumber)
+_position pixelPosition(_position pixelPos, int zoom, int col, int row)
 int escapeSteps(_position)
 _complex squareComplex(_complex)
 Double modulus(_complex)
 
 Printing the set --->
+supplied to us in bmpserver file. Editting the serveBMP function to produce an arry and then write to server.
+unsigned char stepsToRed (int steps);
+unsigned char stepsToBlue (int steps);
+unsigned char stepsToGreen (int steps);
+
+Testing the function (if required) --->
+print out mandelbrot set with * and space characters
