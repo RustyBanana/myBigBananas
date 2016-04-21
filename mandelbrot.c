@@ -52,11 +52,12 @@ static void unitTest(void);
 static int waitForConnection (int serverSocket);
 static int makeServerSocket (int portno);
 static double stringToDouble(char *numString);
-static void serveBMP (int socket);
+static void serveBMP (int socket, complex centre, int zoom);
 static void serveHTML (int socket);
+complex pixelPosition(complex centrePixel, int zoom, int col, int row);
 
 int main (int argc, char *argv[]) {
-      
+   unitTest();   
    printf ("************************************\n");
    printf ("Starting simple server %f\n", SIMPLE_SERVER_VERSION);
    printf ("Serving bmps since 2012\n");   
@@ -130,8 +131,10 @@ int main (int argc, char *argv[]) {
 
          
          printf("x: %lf, y: %lf, z: %d here we go",x,y,zoom);
-         
-         serveBMP(connectionSocket);
+         complex centre;
+         centre.a = x;
+         centre.b = y;
+         serveBMP(connectionSocket, centre, zoom);
       } else {
          //empty request; send back script
          serveHTML(connectionSocket);
@@ -167,6 +170,7 @@ static void serveHTML (int socket) {
    write (socket, message, strlen (message));
 }
 
+
 static double stringToDouble(char *numString) {
    int i = 0;
    int pointerIndex = 0;
@@ -181,21 +185,33 @@ static double stringToDouble(char *numString) {
    i = i - 1;
    int endIndex = i;
    if (pointerIndex == 0) {
-      pointerIndex = endIndex;
+      pointerIndex = endIndex + 1;
    }
    while (i>0) {
-      result += (numString[i] - '0') * pow(10, pointerIndex - i);
+      if (i < pointerIndex) {
+         //num is before the decimal point
+         result += (numString[i] - '0') * pow(10, pointerIndex - i - 1);
+      } else if (i > pointerIndex) {
+         //num is after the decimal point
+         result += (numString[i] - '0') * pow(10, pointerIndex - i);
+      }
       i = i - 1;
    }
    if (numString[i] == '-') {
       result = 0 - result;
    } else {
-      result += (numString[i] - '0') * pow(10, pointerIndex - i);
+      if (i < pointerIndex) {
+         //num is before the decimal point
+         result += (numString[i] - '0') * pow(10, pointerIndex - i - 1);
+      } else if (i > pointerIndex) {
+         //num is after the decimal point
+         result += (numString[i] - '0') * pow(10, pointerIndex - i);
+      }
    }
    return result;
 }
 
-static void serveBMP (int socket) {
+static void serveBMP (int socket, complex centre, int zoom) {
    char* message;
    
    // first send the http response header
@@ -228,21 +244,21 @@ static void serveBMP (int socket) {
      0x00,0x00,0x00,0x00 //pixels start from here.
    };
    
-   //position pixelPos;
+   complex pixelPos;
    int bmpIndex = HEADER_SIZE;
-   //int steps;
+   int steps;
    int row = 0;
    int col;
    while (row < SIZE) {
       col = 0;
       while (col < SIZE) {
-//         pixelPos = pixelPosition(centre, zoom, col, row);
-//         steps = escapeSteps(pixelPos);
-         bmp[bmpIndex] = 255;//stepsToBlue(steps);
+         pixelPos = pixelPosition(centre, zoom, col, row);
+         steps = escapeSteps(pixelPos.a,pixelPos.b);
+         bmp[bmpIndex] = stepsToBlue(steps);
          bmpIndex++;
-         bmp[bmpIndex] = 255;//stepsToGreen(steps);
+         bmp[bmpIndex] = stepsToGreen(steps);
          bmpIndex++;
-         bmp[bmpIndex] = 255;//stepsToRed(steps);
+         bmp[bmpIndex] = stepsToRed(steps);
          bmpIndex++;
          col++;
       }
@@ -339,8 +355,18 @@ int escapeSteps(double x, double y) {
         point.b = squared.b + y; 
         iterations++;
     }
-    printf("%d iterations\n",iterations);
     return iterations;
+}
+
+complex pixelPosition(complex centrePixel, int zoom, int col, int row) {
+   double distancePixel;
+   complex pixelPosition;
+   distancePixel = pow(2,-zoom); 
+   pixelPosition.a = centrePixel.a - (SIZE * distancePixel/2) + col*distancePixel;
+   pixelPosition.b = centrePixel.b - (SIZE * distancePixel/2) + row*distancePixel;
+   printf("%lf,%lf\n", centrePixel.a, centrePixel.a);
+   printf("%lf,%lf\n", pixelPosition.a, pixelPosition.a);
+   return pixelPosition;
 }
 
 static void unitTest(void) {
