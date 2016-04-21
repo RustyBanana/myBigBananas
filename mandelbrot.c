@@ -328,7 +328,7 @@ static double modulus(complex complexNum) {
     return modulus;
 }
 
-static int escapeSteps(double x, double y) {
+int escapeSteps(double x, double y) {
     complex point;
     point.a = x;
     point.b = y;
